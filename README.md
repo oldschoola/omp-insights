@@ -5,6 +5,8 @@
 
 Personal usage analytics for the [Pi coding agent](https://github.com/earendil-works/pi). Scans your session history, extracts deterministic stats and LLM-powered facets, then generates a self-contained HTML report covering your workflows, friction points, and suggestions for improvement.
 
+Built by the [Observal](https://github.com/BlazeUp-AI/Observal) team while developing our agent observability platform. We needed to understand how we actually use Pi across hundreds of sessions, what patterns emerge, and where we waste time or money. This extension is the result.
+
 ## Install
 
 **From npm** (recommended):
@@ -31,20 +33,34 @@ pi -e npm:@observal/pi-insights
 Run the command inside any Pi session:
 
 ```
-/insights
+/pi-insights
 ```
 
-The report opens in your browser automatically. It covers:
+The report opens in your browser automatically.
 
-- **At a Glance** synthesis of what is working, what is hindering you, quick wins, and ambitious workflows
-- **Stats Overview** with tokens, cost, lines changed, tool usage, and response time distributions
-- **Project Areas** grouped by where you spent time
-- **Interaction Style** analysis of how you work with Pi
-- **What's Working** with your most impressive workflows
-- **Friction Analysis** categorized by type with concrete examples
-- **Suggestions** including config additions, features to try, and usage patterns with copyable prompts
-- **Model Efficiency** analysis showing overspend (expensive models on simple tasks), underspend (cheap models failing on complex work), cost breakdown by model, and estimated waste
-- **On the Horizon** for ambitious future workflows as models improve
+### Report Sections
+
+- **Summary** of what is working, what is hindering you, quick wins, and ambitious workflows
+- **What Changed This Week** showing cost, errors, and model shifts compared to last week
+- **By the Numbers** with tokens, cost, lines changed, tool usage, and response time distributions
+- **Where You Worked** grouped by project
+- **How You Work** analysis of your interaction patterns
+- **Wins** with your most impressive workflows
+- **Where Things Broke** split into resolved friction (wins) and ongoing friction (with severity)
+- **Next Steps** including config additions, features to try, usage patterns with copyable prompts, and things to stop doing
+- **Future Workflows** for ambitious opportunities as models improve
+- **Model Spend** showing overspend, underspend, cost breakdown by model, and estimated waste
+
+### What Makes This Different
+
+Most Pi insight extensions dump flat aggregates into an LLM prompt and get the same generic report every time. This one is temporal-aware:
+
+- **Week-over-week diffs**: see what actually changed, not a static portrait
+- **Trajectory detection**: are your costs/errors improving, worsening, or stable?
+- **Anomaly detection**: spikes in cost or errors are surfaced with context
+- **Resolved vs ongoing friction**: only surfaces problems you still have, not ones you fixed
+- **Context-aware suggestions**: reads your existing AGENTS.md, installed skills, extensions, and packages. Will not suggest what you already have.
+- **Negative suggestions**: tells you what to stop doing, not just what to add
 
 ### Flags
 
@@ -57,13 +73,13 @@ The report opens in your browser automatically. It covers:
 
 ```bash
 # Normal run (uses caches, fast on re-runs)
-/insights
+/pi-insights
 
 # Force re-extraction of all session facets
-/insights --refresh
+/pi-insights --refresh
 
 # Generate without auto-opening
-/insights --no-open
+/pi-insights --no-open
 ```
 
 ## How It Works
@@ -73,8 +89,8 @@ The pipeline runs in five phases:
 1. **Scan** all Pi session log files
 2. **Extract stats** deterministically from each session (tool counts, tokens, languages, git activity, response times)
 3. **LLM facet extraction** per session to classify goals, outcomes, satisfaction, and friction
-4. **Aggregate and generate insights** using 8 parallel insight prompts (including model efficiency) plus a synthesis prompt
-5. **Render** a self-contained HTML report with charts, cards, and copyable suggestions
+4. **Aggregate with temporal weighting**, compute diffs, detect anomalies and transitions, gather user context
+5. **Generate insights** using 8 parallel LLM prompts (with temporal and user context injected) plus a synthesis prompt, then **render** a self-contained HTML report
 
 Results are cached in `~/.pi/agent/usage-data/`:
 
