@@ -1745,14 +1745,14 @@ function generateHTML(
     --radius: 10px; --radius-sm: 6px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 15px; line-height: 1.6; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, 'Segoe UI', sans-serif; font-size: 16px; line-height: 1.7; }
   a { color: var(--accent); text-decoration: none; }
   a:hover { text-decoration: underline; }
   strong { font-weight: 600; }
 
   .container { max-width: 1040px; margin: 0 auto; padding: 40px 24px 80px; }
   header { text-align: center; padding: 48px 0 40px; border-bottom: 1px solid var(--border); margin-bottom: 40px; }
-  header h1 { font-size: 32px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
+  header h1 { font-size: 38px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
   header .subtitle { color: var(--dim); margin-top: 8px; font-size: 14px; }
 
   nav { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 40px; }
@@ -1760,7 +1760,7 @@ function generateHTML(
   nav a:hover { color: var(--text); border-color: var(--border2); text-decoration: none; background: var(--bg2); }
 
   section { margin-bottom: 48px; }
-  h2 { font-size: 20px; font-weight: 600; color: var(--text); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  h2 { font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
   h2 .emoji { font-size: 18px; }
   h3 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
 
@@ -1776,7 +1776,7 @@ function generateHTML(
   .stat-label { font-size: 12px; color: var(--dim); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
   .stat-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
-  .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; font-size: 13px; }
+  .bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; font-size: 14px; }
   .bar-row.compact { margin-bottom: 2px; }
   .bar-label { width: 140px; flex-shrink: 0; color: var(--dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .bar-track { flex: 1; height: 10px; background: var(--bg3); border-radius: 5px; overflow: hidden; }
@@ -1794,16 +1794,16 @@ function generateHTML(
   .at-a-glance-part p { color: var(--text); line-height: 1.7; }
 
   .area-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; }
-  .area-card h3 { color: var(--accent2); font-size: 15px; }
+  .area-card h3 { color: var(--accent2); font-size: 17px; }
   .area-card .count { color: var(--muted); font-size: 12px; margin-left: 8px; }
   .area-card p { color: var(--dim); margin-top: 8px; font-size: 14px; }
 
   .workflow-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; }
-  .workflow-card h3 { color: var(--green); font-size: 15px; }
+  .workflow-card h3 { color: var(--green); font-size: 17px; }
   .workflow-card p { color: var(--dim); margin-top: 8px; font-size: 14px; }
 
   .friction-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; }
-  .friction-card h3 { color: var(--yellow); font-size: 15px; }
+  .friction-card h3 { color: var(--yellow); font-size: 17px; }
   .friction-card p { color: var(--dim); margin-top: 8px; font-size: 14px; }
   .friction-card .examples { margin-top: 10px; }
   .friction-card .example { font-size: 13px; color: var(--muted); padding: 4px 0 4px 14px; border-left: 2px solid var(--border2); margin-top: 6px; }
@@ -1859,15 +1859,15 @@ function generateHTML(
 </header>
 
 <nav>
-  <a href="#at-a-glance">At a Glance</a>
-  <a href="#stats">Stats</a>
-  <a href="#projects">Project Areas</a>
-  <a href="#style">Interaction Style</a>
-  <a href="#what-works">What's Working</a>
+  <a href="#at-a-glance">Summary</a>
+  <a href="#stats">Numbers</a>
+  <a href="#projects">Where You Worked</a>
+  <a href="#style">How You Work</a>
+  <a href="#what-works">Wins</a>
   <a href="#friction">Friction</a>
-  <a href="#suggestions">Suggestions</a>
-  <a href="#horizon">On the Horizon</a>
-  <a href="#model-efficiency">Model Efficiency</a>
+  <a href="#suggestions">Next Steps</a>
+  <a href="#horizon">Future</a>
+  <a href="#model-efficiency">Model Spend</a>
 </nav>
 
 ${temporal.diff_headlines.length ? `
@@ -1881,7 +1881,7 @@ ${temporal.diff_headlines.length ? `
 
 <!-- ── At a Glance ── -->
 <section id="at-a-glance">
-  <h2><span class="emoji">⚡</span> At a Glance</h2>
+  <h2><span class="emoji">⚡</span> Summary</h2>
   <div class="at-a-glance">
     <div class="at-a-glance-part">
       <h3>What's Working</h3>
@@ -1904,7 +1904,7 @@ ${temporal.diff_headlines.length ? `
 
 <!-- ── Stats ── -->
 <section id="stats">
-  <h2><span class="emoji">📊</span> Stats Overview</h2>
+  <h2><span class="emoji">📊</span> By the Numbers</h2>
   <div class="stat-grid">
     ${statCard("Sessions", String(agg.total_sessions), `${agg.days_active} active days`)}
     ${statCard("Messages", String(agg.total_messages), `${(agg.total_messages / Math.max(agg.total_sessions, 1)).toFixed(1)} per session`)}
@@ -1965,7 +1965,7 @@ ${temporal.diff_headlines.length ? `
 
 <!-- ── Project Areas ── -->
 <section id="projects">
-  <h2><span class="emoji">🗂️</span> Project Areas</h2>
+  <h2><span class="emoji">🗂️</span> Where You Worked</h2>
   <div class="card-grid ${areas.length > 2 ? "cols2" : ""}">
     ${areas
 			.map(
@@ -1980,7 +1980,7 @@ ${temporal.diff_headlines.length ? `
 
 <!-- ── Interaction Style ── -->
 <section id="style">
-  <h2><span class="emoji">🎯</span> Interaction Style</h2>
+  <h2><span class="emoji">🎯</span> How You Work</h2>
   <div class="card">
     ${iStyle?.narrative ? `<div style="line-height:1.8">${renderMarkdown(esc(iStyle.narrative))}</div>` : "<p class='muted'>No data</p>"}
     ${iStyle?.key_pattern ? `<div style="margin-top:16px;padding:14px 16px;background:var(--bg3);border-radius:var(--radius-sm);border:1px solid var(--border2);color:var(--accent2);font-size:14px;font-style:italic">"${esc(iStyle.key_pattern)}"</div>` : ""}
@@ -1989,7 +1989,7 @@ ${temporal.diff_headlines.length ? `
 
 <!-- ── What's Working ── -->
 <section id="what-works">
-  <h2><span class="emoji">✨</span> What's Working</h2>
+  <h2><span class="emoji">✨</span> Wins</h2>
   ${whatWorks?.intro ? `<p style="color:var(--dim);margin-bottom:16px">${esc(whatWorks.intro)}</p>` : ""}
   <div class="card-grid ${(whatWorks?.impressive_workflows?.length ?? 0) > 1 ? "cols2" : ""}">
     ${(whatWorks?.impressive_workflows ?? [])
@@ -2005,7 +2005,7 @@ ${temporal.diff_headlines.length ? `
 
 <!-- ── Friction ── -->
 <section id="friction">
-  <h2><span class="emoji">⚠️</span> Friction Analysis</h2>
+  <h2><span class="emoji">⚠️</span> Where Things Broke</h2>
   ${frictionSec?.intro ? `<p style="color:var(--dim);margin-bottom:16px">${esc(frictionSec.intro)}</p>` : ""}
   ${(frictionSec?.resolved?.length) ? `<div style="margin-bottom:20px">
     <h3 style="color:var(--green);font-size:14px;margin-bottom:10px">\u2705 Resolved</h3>
@@ -2028,7 +2028,7 @@ ${temporal.diff_headlines.length ? `
 
 <!-- ── Suggestions ── -->
 <section id="suggestions">
-  <h2><span class="emoji">💡</span> Suggestions</h2>
+  <h2><span class="emoji">💡</span> Next Steps</h2>
 
   ${
 		configAdditions.length
@@ -2111,7 +2111,7 @@ ${temporal.diff_headlines.length ? `
 
 <!-- ── On the Horizon ── -->
 <section id="horizon">
-  <h2><span class="emoji">🚀</span> On the Horizon</h2>
+  <h2><span class="emoji">🚀</span> Future Workflows</h2>
   ${horizonSec?.intro ? `<p style="color:var(--dim);margin-bottom:16px">${esc(horizonSec.intro)}</p>` : ""}
   <div style="display:flex;flex-direction:column;gap:12px">
     ${(horizonSec?.opportunities ?? [])
@@ -2130,7 +2130,7 @@ ${temporal.diff_headlines.length ? `
 
 <!-- ── Model Efficiency ── -->
 <section id="model-efficiency">
-  <h2><span class="emoji">⚡</span> Model Efficiency</h2>
+  <h2><span class="emoji">💸</span> Model Spend</h2>
   ${modelEffSec?.summary ? `<p style="color:var(--dim);margin-bottom:16px">${esc(modelEffSec.summary)}</p>` : ""}
 
   <div class="stat-grid">
