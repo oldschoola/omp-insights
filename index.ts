@@ -2,32 +2,33 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 /**
- * /insights — Pi Usage Insights
+ * /omp-insights — omp Usage Insights
  *
- * Scans all Pi session logs, extracts deterministic stats, runs LLM
+ * Scans all omp session logs, extracts deterministic stats, runs LLM
  * facet extraction per session (cached), fires 7 parallel insight prompts
  * + 1 synthesis, and writes a self-contained HTML report.
  *
  * Usage:
- *   /insights             — run with caches (fast on re-runs)
- *   /insights --refresh   — invalidate all LLM facet caches, re-extract
- *   /insights --no-open   — don't open the report in the browser
+ *   /omp-insights             — run with caches (fast on re-runs)
+ *   /omp-insights --refresh   — invalidate all LLM facet caches, re-extract
+ *   /omp-insights --no-open   — don't open the report in the browser
  *
- * Data dir: ~/.pi/agent/usage-data/
+ * Data dir: ~/.omp/agent/usage-data/
  *   session-meta/<id>.json   deterministic stats, cached permanently
  *   facets/<id>.json         LLM-extracted facets, cached permanently
  *   report.html              last generated report
  */
 
-import { complete } from "@earendil-works/pi-ai";
+import { complete } from "@oh-my-pi/pi-ai";
 import type {
 	ExtensionAPI,
 	ExtensionCommandContext,
-} from "@earendil-works/pi-coding-agent";
-import { SessionManager } from "@earendil-works/pi-coding-agent";
+} from "@oh-my-pi/pi-coding-agent";
+import { SessionManager } from "@oh-my-pi/pi-coding-agent";
+import { getAgentDir } from "@oh-my-pi/pi-utils";
 import { execFile as execFileCb } from "node:child_process";
 import { mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises";
-import { homedir, platform } from "node:os";
+import { platform } from "node:os";
 import { extname, join } from "node:path";
 import { promisify } from "node:util";
 
@@ -35,7 +36,7 @@ const execFile = promisify(execFileCb);
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const DATA_DIR = join(homedir(), ".pi", "agent", "usage-data");
+const DATA_DIR = join(getAgentDir(), "usage-data");
 const FACETS_DIR = join(DATA_DIR, "facets");
 const META_DIR = join(DATA_DIR, "session-meta");
 const REPORT_PATH = join(DATA_DIR, "report.html");
@@ -341,7 +342,7 @@ async function deleteCachedFacets(sessionId: string): Promise<void> {
 }
 
 async function gatherUserContext(): Promise<UserContext> {
-	const agentDir = join(homedir(), ".pi", "agent");
+	const agentDir = getAgentDir();
 	const ctx: UserContext = { existing_agents_md_rules: [], installed_skills: [], installed_extensions: [], installed_packages: [], default_model: "" };
 
 	try {
@@ -1252,10 +1253,10 @@ async function callModel(
 ): Promise<string> {
 	const model = ctx.model;
 	if (!model) throw new Error("No active model");
-	const auth = await ctx.modelRegistry.getApiKeyAndHeaders(model as never);
-	if (!auth.ok) throw new Error(auth.error);
-	const apiKey = auth.apiKey ?? "";
-	const headers = auth.headers;
+	const apiKey = await ctx.modelRegistry.getApiKey(model as never);
+	if (!apiKey) {
+		throw new Error(`No API key for ${model.provider}/${model.id}`);
+	}
 
 	const response = await complete(
 		model as never,
@@ -1268,7 +1269,7 @@ async function callModel(
 				},
 			],
 		},
-		{ apiKey, headers },
+		{ apiKey },
 	);
 
 	return response.content
@@ -1374,14 +1375,14 @@ ${agg.user_instructions.map((i) => `- ${i}`).join("\n")}` +
 	);
 }
 
-const PI_FEATURES_REFERENCE = `## PI FEATURES REFERENCE:
-1. Extensions — TypeScript modules in ~/.pi/agent/extensions/ that register custom tools, commands, shortcuts, and react to lifecycle events
+const PI_FEATURES_REFERENCE = `## OMP FEATURES REFERENCE:
+1. Extensions — TypeScript modules in ~/.omp/agent/extensions/ that register custom tools, commands, shortcuts, and react to lifecycle events
    - Good for: automating repetitive actions, gating dangerous operations, custom UI, external integrations
 
-2. Skills — Markdown prompt templates in ~/.pi/agent/skills/ invoked with /skill:name
+2. Skills — Markdown prompt templates in ~/.omp/agent/skills/ invoked with /skill:name
    - Good for: repeatable workflows like code review, commit message generation, debugging guides
 
-3. Subagents (via pi-subagents extension) — spawn focused agents for parallel/exploratory work
+3. Subagents (via the built-in subagent tool) — spawn focused agents for parallel/exploratory work
    - Good for: large codebase exploration, parallel tasks, multi-step investigations
 
 4. Lifecycle hooks (via extensions) — react to tool_call, tool_result, before_agent_start events
@@ -1403,7 +1404,7 @@ RESPOND WITH ONLY A VALID JSON OBJECT:
     {
       "name": "area name",
       "session_count": N,
-      "description": "2-3 sentences about what was worked on and how Pi was used"
+      "description": "2-3 sentences about what was worked on and how omp was used"
     }
   ]
 }
@@ -1413,7 +1414,7 @@ Include 4-5 areas. Skip internal tooling sessions.
 DATA:
 ${data}`,
 
-		interaction_style: `Analyze this usage data and describe the user's interaction style with Pi.
+		interaction_style: `Analyze this usage data and describe the user's interaction style with omp.
 
 RESPOND WITH ONLY A VALID JSON OBJECT:
 {
@@ -1424,7 +1425,7 @@ RESPOND WITH ONLY A VALID JSON OBJECT:
 DATA:
 ${data}`,
 
-		what_works: `Analyze this usage data and identify what's working well for this user with Pi.
+		what_works: `Analyze this usage data and identify what's working well for this user with omp.
 Use second person ("you").
 
 RESPOND WITH ONLY A VALID JSON OBJECT:
@@ -1476,7 +1477,7 @@ Max 2 resolved, 3 ongoing.
 DATA:
 ${data}`,
 
-		suggestions: `Analyze this usage data and suggest improvements for working with Pi.
+		suggestions: `Analyze this usage data and suggest improvements for working with omp.
 
 ${PI_FEATURES_REFERENCE}
 
@@ -1493,7 +1494,7 @@ RESPOND WITH ONLY A VALID JSON OBJECT:
     {
       "addition": "a specific rule NOT already in their AGENTS.md",
       "why": "1 sentence referencing actual ongoing friction",
-      "where": "AGENTS.md | settings.json | ~/.pi/agent/extensions/ | ~/.pi/agent/skills/"
+      "where": "AGENTS.md | settings.json | ~/.omp/agent/extensions/ | ~/.omp/agent/skills/"
     }
   ],
   "features_to_try": [
@@ -1532,7 +1533,7 @@ RESPOND WITH ONLY A VALID JSON OBJECT:
   "opportunities": [
     {
       "title": "short title (4-8 words)",
-      "whats_possible": "2-3 ambitious sentences about autonomous Pi workflows",
+      "whats_possible": "2-3 ambitious sentences about autonomous omp workflows",
       "how_to_try": "1-2 sentences on how to start experimenting with this",
       "copyable_prompt": "detailed prompt to try right now"
     }
@@ -1599,7 +1600,7 @@ function buildSynthesisPrompt(
 	data: string,
 	sections: Record<string, unknown>,
 ): string {
-	return `You're writing an "At a Glance" section for a Pi usage insights report. The goal is to help the user understand their patterns and improve how they work with AI assistance.
+	return `You're writing an "At a Glance" section for an omp usage insights report. The goal is to help the user understand their patterns and improve how they work with AI assistance.
 
 Use this 4-part structure:
 
@@ -1613,7 +1614,7 @@ Use this 4-part structure:
    Be honest and constructive. Aim for patterns, not one-off incidents.
 
 3. Quick wins to try
-   Specific Pi features or workflow changes they could adopt immediately. Avoid generic advice — suggest concrete things.
+   Specific omp features or workflow changes they could adopt immediately. Avoid generic advice — suggest concrete things.
 
 4. Ambitious workflows
    As models become significantly more capable, what workflows that feel out of reach today will become practical?
@@ -1782,7 +1783,7 @@ function generateMarkdown(
 	temporal: TemporalData,
 ): string {
 	const lines: string[] = [];
-	lines.push("# Pi Insights");
+	lines.push("# omp Insights");
 	lines.push(`> ${agg.date_range.start} to ${agg.date_range.end} | ${agg.total_sessions} sessions | Generated ${new Date().toLocaleDateString()}`);
 	lines.push("");
 
@@ -1966,7 +1967,7 @@ function generateHTML(
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pi Insights — ${esc(agg.date_range.start)} to ${esc(agg.date_range.end)}</title>
+<title>omp Insights — ${esc(agg.date_range.start)} to ${esc(agg.date_range.end)}</title>
 <style>
   :root {
     --bg: #0d0f12; --bg2: #161a1f; --bg3: #1e2329;
@@ -2081,7 +2082,7 @@ function generateHTML(
 <div class="container">
 
 <header>
-  <h1>🔍 Pi Insights</h1>
+  <h1>🔍 omp Insights</h1>
   <div class="subtitle">
     ${esc(agg.date_range.start)} – ${esc(agg.date_range.end)}
     &nbsp;·&nbsp;
@@ -2453,7 +2454,7 @@ function copyFromBox(btn) {
 }
 function copyAllConfig() {
   const checks = document.querySelectorAll('.cfg-check:checked');
-  const lines = ['# Pi AGENTS.md additions (generated by /insights)', ''];
+  const lines = ['# omp AGENTS.md additions (generated by /omp-insights)', ''];
   for (const ch of checks) {
     const where = ch.dataset.where || '';
     const addition = ch.dataset.addition || '';
@@ -2499,7 +2500,7 @@ async function runInsights(
 	ctx.ui.setStatus("insights", "🔍 Scanning sessions...");
 	ctx.ui.setWidget("insights", [
 		"",
-		"  📊 Pi Insights",
+		"  📊 omp Insights",
 		"  ─────────────────────────────────",
 		"  Phase 1/5: Scanning session files...",
 	]);
@@ -2511,7 +2512,7 @@ async function runInsights(
 
 	ctx.ui.setWidget("insights", [
 		"",
-		"  📊 Pi Insights",
+		"  📊 omp Insights",
 		"  ─────────────────────────────────",
 		`  Phase 1/5 done — found ${allInfos.length} sessions`,
 		"  Phase 2/5: Extracting session stats...",
@@ -2571,7 +2572,7 @@ async function runInsights(
 		);
 		ctx.ui.setWidget("insights", [
 			"",
-			"  📊 Pi Insights",
+			"  📊 omp Insights",
 			"  ─────────────────────────────────",
 			`  Phase 2/5: Loaded ${cachedMetaIds.size} cached, ${loadedCount}/${toLoad.length} new`,
 		]);
@@ -2588,7 +2589,7 @@ async function runInsights(
 
 	ctx.ui.setWidget("insights", [
 		"",
-		"  📊 Pi Insights",
+		"  📊 omp Insights",
 		"  ─────────────────────────────────",
 		`  Phase 2/5 done — ${substantive.length} substantive sessions`,
 		"  Phase 3/5: LLM facet extraction...",
@@ -2672,7 +2673,7 @@ RESPOND WITH ONLY A VALID JSON OBJECT:
 					facetsDone++;
 					ctx.ui.setWidget("insights", [
 						"",
-						"  📊 Pi Insights",
+						"  📊 omp Insights",
 						"  ─────────────────────────────────",
 						`  Phase 3/5: Facets ${facetsDone}/${needsFacets.length}...`,
 					]);
@@ -2693,7 +2694,7 @@ RESPOND WITH ONLY A VALID JSON OBJECT:
 
 	ctx.ui.setWidget("insights", [
 		"",
-		"  📊 Pi Insights",
+		"  📊 omp Insights",
 		"  ─────────────────────────────────",
 		`  Phase 3/5 done — ${facetsMap.size} facets extracted`,
 		"  Phase 4/5: Generating insights...",
@@ -2724,7 +2725,7 @@ RESPOND WITH ONLY A VALID JSON OBJECT:
 			sectionsDone++;
 			ctx.ui.setWidget("insights", [
 				"",
-				"  📊 Pi Insights",
+				"  📊 omp Insights",
 				"  ─────────────────────────────────",
 				`  Phase 4/5: Insights ${sectionsDone}/${sectionKeys.length}...`,
 			]);
@@ -2734,7 +2735,7 @@ RESPOND WITH ONLY A VALID JSON OBJECT:
 	// Synthesis (At a Glance)
 	ctx.ui.setWidget("insights", [
 		"",
-		"  📊 Pi Insights",
+		"  📊 omp Insights",
 		"  ─────────────────────────────────",
 		"  Phase 4/5: Synthesis...",
 	]);
@@ -2761,7 +2762,7 @@ RESPOND WITH ONLY A VALID JSON OBJECT:
 	// ── Phase 5: Render HTML ──────────────────────────────────────────────────────
 	ctx.ui.setWidget("insights", [
 		"",
-		"  📊 Pi Insights",
+		"  📊 omp Insights",
 		"  ─────────────────────────────────",
 		"  Phase 5/5: Rendering report...",
 	]);
@@ -2774,18 +2775,20 @@ RESPOND WITH ONLY A VALID JSON OBJECT:
 		await writeFile(REPORT_MD_PATH, md, { encoding: "utf-8" });
 		ctx.ui.setStatus("insights", "");
 		ctx.ui.setWidget("insights", undefined);
-		ctx.ui.notify(`✅ Markdown report saved: ${REPORT_MD_PATH}`, "success");
+		ctx.ui.notify(`✅ Markdown report saved: ${REPORT_MD_PATH}`, "info");
 		return;
 	}
 
 	ctx.ui.setStatus("insights", "");
 	ctx.ui.setWidget("insights", undefined);
 
-	ctx.ui.notify(`✅ Report saved: ${REPORT_PATH}`, "success");
+	ctx.ui.notify(`✅ Report saved: ${REPORT_PATH}`, "info");
 
 	if (!noOpen) {
-		const opener = platform() === "darwin" ? "open" : "xdg-open";
-		execFile(opener, [REPORT_PATH]).catch(() => {
+		const p = platform();
+		const opener = p === "darwin" ? "open" : p === "win32" ? "cmd" : "xdg-open";
+		const openerArgs = p === "win32" ? ["/c", "start", "", REPORT_PATH] : [REPORT_PATH];
+		execFile(opener, openerArgs).catch(() => {
 			ctx.ui.notify(`Open manually: ${REPORT_PATH}`, "info");
 		});
 	}
@@ -2794,9 +2797,9 @@ RESPOND WITH ONLY A VALID JSON OBJECT:
 // ─── Extension Entry ──────────────────────────────────────────────────────────
 
 export default function (pi: ExtensionAPI) {
-	pi.registerCommand("pi-insights", {
+	pi.registerCommand("omp-insights", {
 		description:
-			"Generate a personal usage insights report from your Pi session history",
+			"Generate a personal usage insights report from your omp session history",
 		handler: async (args, ctx) => {
 			try {
 				await runInsights(args ?? "", ctx);

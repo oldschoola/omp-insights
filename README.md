@@ -1,41 +1,48 @@
 <!-- SPDX-FileCopyrightText: 2026 Hari Srinivasan <harisrini21@gmail.com> -->
 <!-- SPDX-License-Identifier: AGPL-3.0-only -->
 
-![Pi Insights header showing weekly changes and navigation](assets/main.png)
+![omp Insights header showing weekly changes and navigation](assets/main.png)
 
-# Pi Insights
+# omp Insights
 
-Personal usage analytics for the [Pi coding agent](https://github.com/earendil-works/pi). Scans your session history, extracts deterministic stats and LLM-powered facets, then generates a self-contained HTML report covering your workflows, friction points, and suggestions for improvement.
+Personal usage analytics for [omp](https://github.com/can1357/oh-my-pi). Scans your session history, extracts deterministic stats and LLM-powered facets, then generates a self-contained HTML report covering your workflows, friction points, and suggestions for improvement.
 
-Built by the [Observal](https://github.com/BlazeUp-AI/Observal) team while developing our agent observability platform. We needed to understand how we actually use Pi across hundreds of sessions, what patterns emerge, and where we waste time or money. This extension is the result.
+Forked from [BlazeUp-AI/pi-insights](https://github.com/BlazeUp-AI/pi-insights) (originally built by the [Observal](https://github.com/BlazeUp-AI/Observal) team for the [Pi coding agent](https://github.com/earendil-works/pi)) and adapted to omp's plugin system and data layout.
 
 ## Install
 
-**From npm** (recommended):
+**From source (local clone):**
 
 ```bash
-pi install npm:@observal/pi-insights
+git clone https://github.com/oldschoola/omp-insights.git
+omp plugin install ./omp-insights
 ```
 
-**From source:**
+**From GitHub directly:**
 
 ```bash
-git clone https://github.com/BlazeUp-AI/pi-insights.git
-pi install ./pi-insights
+omp plugin install github:oldschoola/omp-insights
 ```
 
-**Try without installing:**
+**For local development (symlink instead of copy):**
 
 ```bash
-pi -e npm:@observal/pi-insights
+git clone https://github.com/oldschoola/omp-insights.git
+omp plugin link ./omp-insights
+```
+
+Verify it loaded:
+
+```bash
+omp plugin list
 ```
 
 ## Usage
 
-Run the command inside any Pi session:
+Run the command inside any omp session:
 
 ```
-/pi-insights
+/omp-insights
 ```
 
 The report opens in your browser automatically.
@@ -53,19 +60,19 @@ The report opens in your browser automatically.
 
 ```bash
 # Normal run (uses caches, fast on re-runs)
-/pi-insights
+/omp-insights
 
 # Force re-extraction of all session facets
-/pi-insights --refresh
+/omp-insights --refresh
 
 # Generate without auto-opening
-/pi-insights --no-open
+/omp-insights --no-open
 
 # Only analyze the last 7 days
-/pi-insights --since 7d
+/omp-insights --since 7d
 
 # Export as Markdown (for Slack, docs, etc.)
-/pi-insights --md
+/omp-insights --md
 ```
 
 ## What the Report Shows
@@ -96,7 +103,7 @@ Identifies overspend (Opus on simple tasks) and underspend (Sonnet failing on co
 
 ## What Makes This Different
 
-Most Pi insight extensions dump flat aggregates into an LLM prompt and get the same generic report every time. This one is temporal-aware:
+Most coding-agent insight extensions dump flat aggregates into an LLM prompt and get the same generic report every time. This one is temporal-aware:
 
 - **Week-over-week diffs**: see what actually changed, not a static portrait
 - **Decay-weighted charts**: recent sessions have more influence on friction/satisfaction/outcome charts (10-day half-life)
@@ -110,13 +117,13 @@ Most Pi insight extensions dump flat aggregates into an LLM prompt and get the s
 
 The pipeline runs in five phases:
 
-1. **Scan** all Pi session log files
+1. **Scan** all omp session log files via `SessionManager.listAll()`
 2. **Extract stats** deterministically from each session (tool counts, tokens, languages, git activity, response times)
 3. **LLM facet extraction** per session to classify goals, outcomes, satisfaction, and friction
 4. **Aggregate with decay weighting**, compute diffs, detect anomalies and transitions, gather user context
 5. **Generate insights** using 8 parallel LLM prompts (with temporal and user context injected) plus a synthesis prompt, then **render** a self-contained HTML report
 
-Results are cached in `~/.pi/agent/usage-data/`:
+Results are cached under your omp agent dir (`~/.omp/agent/usage-data/` by default, respects `PI_CONFIG_DIR` and XDG):
 
 | Path | Contents |
 |------|----------|
@@ -127,8 +134,12 @@ Results are cached in `~/.pi/agent/usage-data/`:
 
 ## Requirements
 
-- [Pi](https://github.com/earendil-works/pi) v0.74.0 or later
-- An active model configured in Pi (used for both facet extraction and insight generation)
+- [omp](https://github.com/can1357/oh-my-pi) installed and on `PATH`
+- An active model configured in omp (used for both facet extraction and insight generation)
+
+## Compatibility with Pi
+
+The `package.json` keeps a `pi` manifest field alongside `omp`, and omp's compatibility layer remaps `@oh-my-pi/pi-*` imports transparently. The original Pi version remains at [`@observal/pi-insights`](https://www.npmjs.com/package/@observal/pi-insights) — install that if you're running upstream Pi instead of omp.
 
 ## License
 
