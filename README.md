@@ -11,30 +11,50 @@ Forked from [BlazeUp-AI/pi-insights](https://github.com/BlazeUp-AI/pi-insights) 
 
 ## Install
 
-**From source (local clone):**
+**From GitHub (recommended):**
+
+```bash
+omp plugin install git+https://github.com/oldschoola/omp-insights
+```
+
+This works with any git URL form omp's plugin manager accepts: `git+https://...`, `git+ssh://...`, scp-style `git@github.com:oldschoola/omp-insights`, or the shorthand `github:oldschoola/omp-insights`.
+
+**For local development (symlink an unpushed checkout):**
 
 ```bash
 git clone https://github.com/oldschoola/omp-insights.git
-omp plugin install ./omp-insights
+omp plugin link "$(pwd)/omp-insights"
 ```
 
-**From GitHub directly:**
+On Windows use the full absolute path, e.g. `omp plugin link C:\path\to\omp-insights` — relative paths can get mangled by some shells.
+
+After `link`, `omp plugin doctor` will print an `orphan` warning for the plugin. That's expected: omp's `plugin list` only iterates `package.json` dependencies, but the runtime extension loader unions deps with linked entries, so the plugin still loads.
+
+**Verify:**
 
 ```bash
-omp plugin install github:oldschoola/omp-insights
+omp plugin doctor
+# Expect either:
+#   ✔ plugin:@oldschoola/omp-insights: v1.2.3 - ...   (install path)
+#   ⚠ orphan:@oldschoola/omp-insights: Plugin in config but not installed   (link path)
 ```
 
-**For local development (symlink instead of copy):**
+**One-shot run without installing:**
 
 ```bash
 git clone https://github.com/oldschoola/omp-insights.git
-omp plugin link ./omp-insights
+omp -e ./omp-insights/index.ts
 ```
 
-Verify it loaded:
+**Uninstall / unlink:**
 
 ```bash
-omp plugin list
+# Installed via `omp plugin install`:
+omp plugin uninstall @oldschoola/omp-insights
+
+# Linked via `omp plugin link` (uninstall doesn't work for symlinked entries today):
+rm "$HOME/.omp/plugins/node_modules/@oldschoola/omp-insights"
+# then remove the "@oldschoola/omp-insights" key from ~/.omp/plugins/omp-plugins.lock.json
 ```
 
 ## Usage
